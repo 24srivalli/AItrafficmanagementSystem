@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AI Traffic Management Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body { font-family: Inter, sans-serif; }
+</style>
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+
+<!-- HEADER -->
+<header class="bg-white shadow border-b">
+  <div class="max-w-7xl mx-auto px-6 h-16 flex justify-between items-center">
+    <h1 class="text-xl font-bold">🚦 AI Traffic Management</h1>
+    <div class="flex items-center gap-2 text-sm text-green-600">
+      <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+      Live
+    </div>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto p-6 space-y-8">
+
+<!-- TOP STATS -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+
+  <!-- Total Vehicles -->
+  <div class="p-6 bg-blue-50 border-2 border-blue-200 rounded-xl flex justify-between items-center">
+    <div>
+      <p class="text-sm text-gray-700 font-medium">Total Vehicles</p>
+      <p id="totalVehicles" class="text-4xl font-bold text-blue-700">40.0</p>
+      <p class="text-sm text-gray-500 mt-1">Currently in intersection</p>
+    </div>
+    <div class="text-blue-600 text-4xl">
+      🚗
+    </div>
+  </div>
+
+  <!-- Avg Waiting Time -->
+  <div class="p-6 bg-yellow-50 border-2 border-yellow-200 rounded-xl flex justify-between items-center">
+    <div>
+      <p class="text-sm text-gray-700 font-medium">Avg Waiting Time</p>
+      <p id="avgWait" class="text-4xl font-bold text-yellow-700">23.3s</p>
+      <p class="text-sm text-gray-500 mt-1">Across all lanes</p>
+    </div>
+    <div class="text-yellow-600 text-4xl">
+      ⏱
+    </div>
+  </div>
+
+  <!-- Total Commute Time -->
+  <div class="p-6 bg-green-50 border-2 border-green-200 rounded-xl flex justify-between items-center">
+    <div>
+      <p class="text-sm text-gray-700 font-medium">Total Commute Time</p>
+      <p id="commuteTime" class="text-4xl font-bold text-green-700">276s</p>
+      <p class="text-sm text-gray-500 mt-1">End-to-end average</p>
+    </div>
+    <div class="text-green-600 text-4xl">
+      🔄
+    </div>
+  </div>
+
+  <!-- AI Reward Score -->
+  <div class="p-6 bg-emerald-50 border-2 border-emerald-200 rounded-xl flex justify-between items-center">
+    <div>
+      <p class="text-sm text-gray-700 font-medium">AI Reward Score</p>
+      <p id="rewardScore" class="text-4xl font-bold text-emerald-700">90.2</p>
+      <p class="text-sm text-gray-500 mt-1">Performance metric</p>
+    </div>
+    <div class="text-emerald-600 text-4xl">
+      🏆
+    </div>
+  </div>
+
+</div>
+
+<!-- INTERSECTION + SIGNAL STATUS -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+<!-- INTERSECTION -->
+<div class="lg:col-span-2 bg-white p-6 rounded-lg shadow">
+  <h2 class="font-semibold mb-4">Four-Way Intersection</h2>
+  <div class="relative h-80 bg-gray-200 rounded-lg flex items-center justify-center">
+
+    <!-- Vertical road -->
+    <div class="absolute h-full w-16 bg-gray-800"></div>
+    <!-- Horizontal road -->
+    <div class="absolute w-full h-16 bg-gray-800"></div>
+
+    <!-- Lane divider lines -->
+    <!-- Vertical divider -->
+    <div class="absolute h-full w-1 left-1/2 -translate-x-1/2 
+                bg-yellow-400 border-dashed border-l-2 border-yellow-400"></div>
+    <!-- Horizontal divider -->
+    <div class="absolute w-full h-1 top-1/2 -translate-y-1/2 
+                bg-yellow-400 border-dashed border-t-2 border-yellow-400"></div>
+
+    <!-- Cars / traffic indicators -->
+    <div class="absolute top-2 text-center">
+      <div class="w-4 h-4 bg-green-500 rounded-full animate-pulse mx-auto"></div>
+      <p id="northCars" class="text-xs bg-white border px-2 py-1 rounded mt-1 shadow-sm font-medium">3 cars</p>
+    </div>
+
+    <div class="absolute bottom-2 text-center">
+      <p id="southCars" class="text-xs bg-white border px-2 py-1 rounded mb-1 shadow-sm font-medium">4 cars</p>
+      <div class="w-4 h-4 bg-green-500 rounded-full animate-pulse mx-auto"></div>
+    </div>
+
+    <div class="absolute left-2 flex items-center gap-2">
+      <div class="w-4 h-4 bg-red-600 rounded-full animate-pulse"></div>
+      <p id="westCars" class="text-xs bg-white border px-2 py-1 rounded shadow-sm font-medium">13 cars</p>
+    </div>
+
+    <div class="absolute right-2 flex items-center gap-2">
+      <p id="eastCars" class="text-xs bg-white border px-2 py-1 rounded shadow-sm font-medium">16 cars</p>
+      <div class="w-4 h-4 bg-red-600 rounded-full animate-pulse"></div>
+    </div>
+
+    <!-- Intersection center label -->
+    <div class="z-10 bg-gray-800 border-2 border-yellow-500 rounded-lg px-2 py-1">
+        <span class="text-[10px] font-bold text-yellow-500 tracking-tighter">INTERSECTION</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- SIGNAL STATUS -->
+<div class="bg-white p-6 rounded-lg shadow space-y-4">
+<h2 class="font-semibold">Signal Status</h2>
+
+<div class="grid grid-cols-2 gap-4">
+  <div class="p-3 bg-green-100 rounded">North – Green</div>
+  <div class="p-3 bg-yellow-100 rounded">South – Yellow</div>
+  <div class="p-3 bg-red-100 rounded">East – Red</div>
+  <div class="p-3 bg-green-100 rounded">West – Green</div>
+</div>
+
+<!-- CYCLE STATUS -->
+<div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+  <div class="flex items-center gap-2 text-blue-700 mb-2">
+    <span>⏱</span>
+    <p class="text-sm font-semibold">Cycle Status</p>
+  </div>
+  <p id="cycleStatus" class="text-xs text-blue-600">
+    AI-optimized timing based on real-time traffic flow
+  </p>
+</div>
+</div>
+
+</div>
+
+<!-- AI CONTROL + HISTORY -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<!-- ================= AI CONTROL PANEL ================= -->
+<div class="bg-white p-6 rounded-xl shadow space-y-4">
+
+  <div class="flex justify-between items-center">
+    <h2 class="font-semibold text-lg">🧠 AI Control Panel</h2>
+    <button
+      id="modeBtn"
+      onclick="toggleMode()"
+      class="bg-green-600 text-white px-4 py-1 rounded flex items-center gap-2"
+    >
+      <span id="modeIcon">▶</span>
+      <span id="modeText">Auto</span>
+    </button>
+  </div>
+
+  <!-- Manual Alert -->
+  <div
+    id="manualAlert"
+    class="hidden bg-red-50 border border-red-300 text-red-700 p-4 rounded-lg"
+  >
+    <p class="font-semibold">⚠ Manual Override Active</p>
+    <p class="text-sm">
+      AI decision-making is paused. Traffic signals are under manual control.
+    </p>
+  </div>
+
+  <!-- Manual Controls -->
+  <div
+    id="manualControls"
+    class="hidden grid grid-cols-2 gap-3"
+  >
+    <button class="bg-green-600 text-white py-2 rounded">N-S Green</button>
+    <button class="bg-green-600 text-white py-2 rounded">E-W Green</button>
+    <button class="bg-yellow-500 text-white py-2 rounded">N-S Yellow</button>
+    <button class="bg-yellow-500 text-white py-2 rounded">E-W Yellow</button>
+  </div>
+
+  <!-- Decision -->
+  <div class="bg-blue-50 border p-4 rounded">
+    <p class="text-sm font-semibold">Current Decision</p>
+    <p id="aiDecision">Maintain current signal timing</p>
+  </div>
+
+  <!-- Confidence -->
+  <div class="bg-yellow-50 border p-4 rounded">
+    <div class="flex justify-between">
+      <span>Confidence Level</span>
+      <span id="confidenceValue">89.9%</span>
+    </div>
+    <div class="w-full bg-gray-200 h-2 rounded mt-2">
+      <div
+        id="confidenceBar"
+        class="bg-yellow-500 h-2 rounded w-[90%]"
+      ></div>
+    </div>
+  </div>
+
+  <!-- Reason -->
+  <div class="border p-4 rounded">
+    <p class="font-semibold">Reasoning</p>
+    <p class="text-sm text-gray-600">Traffic flow is currently optimal</p>
+  </div>
+</div>
+
+<!-- ================= HISTORICAL PERFORMANCE ================= -->
+<div class="bg-white p-6 rounded-xl shadow space-y-4">
+
+  <div class="flex justify-between items-center">
+    <div class="flex items-center gap-2 text-lg font-semibold">
+      🕒 Historical Performance
+    </div>
+    <div
+      id="waitChange"
+      class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-semibold"
+    >
+      ↘ -37.5% wait time
+    </div>
+  </div>
+
+  <!-- Bar Chart -->
+  <div id="barChart" class="h-48 flex items-end gap-3"></div>
+  <!-- Timeline -->
+  <div class="flex justify-between text-sm text-gray-500 pt-2 border-t">
+    <span>10 minutes ago</span>
+    <span>Now</span>
+  </div>
+
+  <!-- Stats -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+    <div class="bg-blue-50 p-4 rounded-xl text-center">
+      <p id="avgWait" class="text-3xl font-bold text-blue-600">25.0s</p>
+      <p class="text-sm text-blue-700">Current Avg Wait</p>
+    </div>
+
+    <div class="bg-green-50 p-4 rounded-xl text-center">
+      <p id="vehiclesHour" class="text-3xl font-bold text-green-600">210</p>
+      <p class="text-sm text-green-700">Vehicles/Hour</p>
+    </div>
+
+    <div class="bg-purple-50 p-4 rounded-xl text-center">
+      <p id="deltaWait" class="text-3xl font-bold text-purple-600">-18.0s</p>
+      <p class="text-sm text-purple-700">vs 10 min ago</p>
+    </div>
+  </div>
+</div>
+<!-- ================= END AI CONTROL ================= -->
+
+</main>
+
+<!-- ================= TOGGLE SCRIPT ================= -->
+<script>
+let isAuto = true;
+
+function toggleMode() {
+  isAuto = !isAuto;
+
+  const btn = document.getElementById("modeBtn");
+  const text = document.getElementById("modeText");
+  const icon = document.getElementById("modeIcon");
+  const alert = document.getElementById("manualAlert");
+  const controls = document.getElementById("manualControls");
+  const decision = document.getElementById("aiDecision");
+
+  if (isAuto) {
+    btn.className =
+      "bg-green-600 text-white px-4 py-1 rounded flex items-center gap-2";
+    text.innerText = "Auto";
+    icon.innerText = "▶";
+
+    alert.classList.add("hidden");
+    controls.classList.add("hidden");
+
+    decision.innerText = "AI optimizing signals automatically";
+  } else {
+    btn.className =
+      "bg-red-600 text-white px-4 py-1 rounded flex items-center gap-2";
+    text.innerText = "Manual";
+    icon.innerText = "⏸";
+
+    alert.classList.remove("hidden");
+    controls.classList.remove("hidden");
+
+    decision.innerText = "Manual control enabled";
+  }
+}
+</script>
+
+
+
+<!-- DYNAMIC SCRIPT -->
+<script>
+  const barChart = document.getElementById("barChart");
+
+  function generateBars() {
+  barChart.innerHTML = "";
+
+  let minute = 30; // starting time label
+
+  for (let i = 0; i < 10; i++) {
+    const value = Math.floor(Math.random() * 25) + 15; // seconds
+    const height = value * 3; // scale height
+
+    // wrapper
+    const wrapper = document.createElement("div");
+    wrapper.className = "flex flex-col items-center text-xs text-gray-500";
+
+    // bar
+    const bar = document.createElement("div");
+    bar.className =
+      bar.className =
+  i >= 7
+    ? "w-11 bg-blue-600 rounded-lg transition-all duration-700"
+    : "w-11 bg-blue-300 rounded-lg transition-all duration-700";
+
+    bar.style.height = height + "px";
+
+    // value text
+    const valueText = document.createElement("div");
+    valueText.className = "mt-1 font-semibold text-gray-700";
+    valueText.innerText = value + "s";
+
+    // time label
+    const timeText = document.createElement("div");
+    timeText.className = "text-[10px] text-gray-400";
+    timeText.innerText = `08:${minute < 10 ? "0" + minute : minute}`;
+
+    minute++;
+
+    wrapper.appendChild(bar);
+    wrapper.appendChild(valueText);
+    wrapper.appendChild(timeText);
+    barChart.appendChild(wrapper);
+  }
+}
+
+
+  function updateStats() {
+    const avgWait = (20 + Math.random() * 15).toFixed(1);
+    const vehicles = Math.floor(180 + Math.random() * 60);
+    const delta = (-Math.random() * 25).toFixed(1);
+    const percent = (-Math.random() * 50).toFixed(1);
+
+    document.getElementById("avgWait").textContent = `${avgWait}s`;
+    document.getElementById("vehiclesHour").textContent = vehicles;
+    document.getElementById("deltaWait").textContent = `${delta}s`;
+    document.getElementById("waitChange").textContent = `↘ ${percent}% wait time`;
+  }
+
+  function updateDashboard() {
+    generateBars();
+    updateStats();
+  }
+
+  updateDashboard();
+  setInterval(updateDashboard, 5000);
+</script>
+
+
+
+<!-- LANE DETAILS -->
+<div class="bg-white p-6 rounded-xl shadow">
+<h2 class="font-semibold mb-4">📍 Lane Details</h2>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+<div class="p-4 bg-gray-50 rounded-lg">
+<h4 class="font-semibold mb-3">North Lane</h4>
+<div class="space-y-2 text-sm">
+  <div class="flex justify-between"><span>Vehicles:</span><span id="northV">14</span></div>
+  <div class="flex justify-between"><span>Wait Time:</span><span id="northW">38.4s</span></div>
+  <div class="w-full bg-gray-200 h-2 rounded">
+    <div id="northBar" class="bg-blue-600 h-2 rounded w-[70%]"></div>
+  </div>
+</div>
+</div>
+
+<div class="p-4 bg-gray-50 rounded-lg">
+<h4 class="font-semibold mb-3">South Lane</h4>
+<div class="space-y-2 text-sm">
+  <div class="flex justify-between"><span>Vehicles:</span><span id="southV">4</span></div>
+  <div class="flex justify-between"><span>Wait Time:</span><span id="southW">15.1s</span></div>
+  <div class="w-full bg-gray-200 h-2 rounded">
+    <div id="southBar" class="bg-blue-600 h-2 rounded w-[30%]"></div>
+  </div>
+</div>
+</div>
+
+<div class="p-4 bg-gray-50 rounded-lg">
+<h4 class="font-semibold mb-3">East Lane</h4>
+<div class="space-y-2 text-sm">
+  <div class="flex justify-between"><span>Vehicles:</span><span id="eastV">20</span></div>
+  <div class="flex justify-between"><span>Wait Time:</span><span id="eastW">42.5s</span></div>
+  <div class="w-full bg-gray-200 h-2 rounded">
+    <div id="eastBar" class="bg-blue-600 h-2 rounded w-[85%]"></div>
+  </div>
+</div>
+</div>
+
+<div class="p-4 bg-gray-50 rounded-lg">
+<h4 class="font-semibold mb-3">West Lane</h4>
+<div class="space-y-2 text-sm">
+  <div class="flex justify-between"><span>Vehicles:</span><span id="westV">8</span></div>
+  <div class="flex justify-between"><span>Wait Time:</span><span id="westW">38.8s</span></div>
+  <div class="w-full bg-gray-200 h-2 rounded">
+    <div id="westBar" class="bg-blue-600 h-2 rounded w-[60%]"></div>
+  </div>
+</div>
+</div>
+
+</div>
+</div>
+
+</main>
+
+<!-- SCRIPT -->
+<script>
+function r(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
+
+const cycleTexts=[
+  "AI-optimized timing based on real-time traffic flow",
+  "North-South cycle extended due to congestion",
+  "Balanced cycle applied across all lanes",
+  "East-West priority temporarily enabled"
+];
+
+setInterval(()=>{
+  totalVehicles.innerText=r(30,90);
+  avgWait.innerText=r(15,40)+"s";
+  commuteTime.innerText=r(120,260)+"s";
+  rewardScore.innerText=r(700,1000);
+
+  northCars.innerText=r(5,25)+" cars";
+  southCars.innerText=r(5,25)+" cars";
+  eastCars.innerText=r(5,25)+" cars";
+  westCars.innerText=r(5,25)+" cars";
+
+  northV.innerText=r(5,25);
+  northW.innerText=r(20,45)+"s";
+  northBar.style.width=r(40,90)+"%";
+
+  southV.innerText=r(3,20);
+  southW.innerText=r(10,30)+"s";
+  southBar.style.width=r(20,50)+"%";
+
+  eastV.innerText=r(8,30);
+  eastW.innerText=r(25,50)+"s";
+  eastBar.style.width=r(50,95)+"%";
+
+  westV.innerText=r(4,22);
+  westW.innerText=r(20,45)+"s";
+  westBar.style.width=r(35,80)+"%";
+
+  confidenceValue.innerText=r(80,98)+"%";
+  confidenceBar.style.width=confidenceValue.innerText;
+
+  histWait.innerText=r(20,35)+"s";
+  histVehicles.innerText=r(150,230);
+  histChange.innerText="-"+r(1,6)+"s";
+
+  cycleStatus.innerText=cycleTexts[r(0,cycleTexts.length-1)];
+},5000);
+</script>
+
+</body>
+</html>
