@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -24,6 +25,27 @@ body { font-family: Inter, sans-serif; }
 </header>
 
 <main class="max-w-7xl mx-auto p-6 space-y-8">
+<!-- 🚑 EMERGENCY SYSTEM -->
+<div id="emergencyPanel"
+     class="hidden bg-red-100 border-2 border-red-400 p-6 rounded-xl animate-pulse">
+  <div class="flex justify-between items-center">
+    <h2 class="text-lg font-bold text-red-700">🚨 EMERGENCY MODE ACTIVE</h2>
+    <button onclick="clearEmergency()"
+            class="bg-red-700 text-white px-4 py-2 rounded">
+      Clear Emergency
+    </button>
+  </div>
+  <p class="text-sm text-red-700 mt-2">
+    AI & Manual control overridden. Emergency vehicle priority enabled.
+  </p>
+</div>
+
+<div class="flex justify-end">
+  <button onclick="triggerEmergency()"
+          class="bg-red-600 text-white px-5 py-2 rounded-lg shadow">
+    🚑 Trigger Emergency
+  </button>
+</div>
 
 <!-- TOP STATS -->
 <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -44,7 +66,7 @@ body { font-family: Inter, sans-serif; }
   <div class="p-6 bg-yellow-50 border-2 border-yellow-200 rounded-xl flex justify-between items-center">
     <div>
       <p class="text-sm text-gray-700 font-medium">Avg Waiting Time</p>
-      <p id="avgWait" class="text-4xl font-bold text-yellow-700">23.3s</p>
+      <p id="avgWaitTop" class="text-4xl font-bold text-yellow-700">23.3s</p>
       <p class="text-sm text-gray-500 mt-1">Across all lanes</p>
     </div>
     <div class="text-yellow-600 text-4xl">
@@ -432,6 +454,22 @@ function toggleMode() {
 <!-- SCRIPT -->
 <script>
 function r(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
+let emergencyActive = false;
+
+function triggerEmergency() {
+  emergencyActive = true;
+  document.getElementById("emergencyPanel").classList.remove("hidden");
+  document.getElementById("aiDecision").innerText =
+    "🚑 Emergency corridor activated";
+}
+
+function clearEmergency() {
+  emergencyActive = false;
+  document.getElementById("emergencyPanel").classList.add("hidden");
+  document.getElementById("aiDecision").innerText =
+    "AI optimizing signals automatically";
+}
+
 
 const cycleTexts=[
   "AI-optimized timing based on real-time traffic flow",
@@ -441,8 +479,10 @@ const cycleTexts=[
 ];
 
 setInterval(()=>{
+  if (emergencyActive) return;
   totalVehicles.innerText=r(30,90);
-  avgWait.innerText=r(15,40)+"s";
+  avgWaitTop.innerText=r(15,40)+"s";
+
   commuteTime.innerText=r(120,260)+"s";
   rewardScore.innerText=r(700,1000);
 
@@ -470,13 +510,9 @@ setInterval(()=>{
   confidenceValue.innerText=r(80,98)+"%";
   confidenceBar.style.width=confidenceValue.innerText;
 
-  histWait.innerText=r(20,35)+"s";
-  histVehicles.innerText=r(150,230);
-  histChange.innerText="-"+r(1,6)+"s";
 
   cycleStatus.innerText=cycleTexts[r(0,cycleTexts.length-1)];
 },5000);
 </script>
 
 </body>
-</html>
